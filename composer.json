@@ -1,0 +1,32 @@
+{
+    "name": "openstore/akilia-bindings",
+    "description": "Openstore akilia bindings",
+    "license": "MIT",
+    "keywords": [
+        "openstore"
+    ],
+    "homepage": "https://github.com/belgattitude/openstore-akilia",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Sébastien Vanvelthem",
+            "homepage": "http://www.nuvolia.com/",
+            "role": "Lead developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "OpenstoreSchema\\Core\\": "src/OpenstoreSchema/Core"
+        }
+    },
+    "require": {
+        "php": ">=5.4.4 || ^7.0",
+        "symfony/console": "^2.6.0 || ^3.0.0"
+    },
+    "bin": ["bin/openstore-akilia"],
+    "archive": {
+        "exclude": ["test", "doc", "tools", ".travis.yml", ".codeclimate.yml", ".coveralls.yml", ".scrutinizer.yml", "phpcs.xml", ".gitignore"]
+    }
+}
+
+
