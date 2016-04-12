@@ -15,7 +15,7 @@ Openstore akilia binding support
 Via composer
 
 ```sh
-$ composer require openstore/akilia-bindings:dev-master
+$ composer require openstore/openstore-akilia:dev-master
 ```
     
 

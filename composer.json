@@ -1,5 +1,5 @@
 {
-    "name": "openstore/akilia-bindings",
+    "name": "belgattitude/openstore-akilia",
     "description": "Openstore akilia bindings",
     "license": "MIT",
     "keywords": [
@@ -16,7 +16,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "OpenstoreSchema\\Core\\": "src/OpenstoreSchema/Core"
+            "OpenstoreAkilia\\": "src/OpenstoreAkilia"
         }
     },
     "require": {
