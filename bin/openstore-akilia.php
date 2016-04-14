@@ -55,7 +55,7 @@ $cli->addCommands(array(
 
 // helpers
 $helpers = array(
-    'openstore-akilia-setip' => new OpenstoreAkilia\Console\Helper\ConfigurationHelper($setup),
+    'openstore-akilia-setup' => new OpenstoreAkilia\Console\Helper\ConfigurationHelper($setup),
     'question' => new Symfony\Component\Console\Helper\QuestionHelper(),
 );
 foreach ($helpers as $name => $helper) {

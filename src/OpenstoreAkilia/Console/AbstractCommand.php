@@ -3,8 +3,6 @@
 
 namespace OpenstoreAkilia\Console;
 
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
 
 
@@ -12,36 +10,14 @@ abstract class AbstractCommand extends Command
 {
 
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-        $emHelper = $this->getHelper('em');
-
-        /* @var $em \Doctrine\ORM\EntityManager */
-        $em = $emHelper->getEntityManager();
-
-        $metadatas = $em->getMetadataFactory()->getAllMetadata();
-
-        if (! empty($metadatas)) {
-            // Create SchemaTool
-            $tool = new SchemaTool($em);
-
-            return $this->executeSchemaCommand($input, $output, $tool, $metadatas);
-        } else {
-            $output->writeln('No Metadata Classes to process.');
-            return 0;
-        }
-    }
 
     /**
      * Return underlying database connection
      *
-     * @return \Doctrine\DBAL\Connection
+     * @return \OpenstoreAkilia\Config\OpenstoreAkiliaSetup
      */
-    protected function getConnection()
+    protected function getOpenstoreAkiliaSetup()
     {
-        return $this->getHelper('db')->getConnection();
+        return $this->getHelper('openstore-akilia-setup')->getSetup();
     }
 }

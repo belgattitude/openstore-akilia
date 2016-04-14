@@ -4,84 +4,35 @@
  *
  * @author Vanvelthem Sébastien
  */
-namespace Akilia;
+namespace OpenstoreAkilia\Sync;
 
-use Akilia\Utils\Akilia1Products;
+use OpenstoreAkilia\Config\OpenstoreAkiliaSetup;
+use OpenstoreAkilia\Db\DbExecuter;
+use OpenstoreAkilia\Utils\Akilia1Products;
 use Zend\Db\Adapter\Adapter;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\Db\Adapter\AdapterAwareInterface;
 use Carbon\Carbon;
+use Soluble\DbWrapper\Adapter\MysqliAdapter;
 
-function convertMemorySize($size)
+
+class AkiliaSynchronizer
 {
-    $unit = [
-        'b',
-        'kb',
-        'mb',
-        'gb',
-        'tb',
-        'pb'
-    ];
-    return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
-};
 
-class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterface
-{
     /**
-     * Whether to output logs
-     * @var boolean
+     * @var OpenstoreAkiliaSetup
      */
-    public $output_log = true;
+    protected $setup;
+
 
     /**
-     *
-     * @var array
-     */
-    protected $configuration;
-
-    /**
-     *
-     * @var Doctrine\Orm\EntityManager
-     */
-    protected $em;
-
-    /**
-     * mysqli connection
-     *
-     * @param Mysqli
-     */
-    protected $mysqli;
-
-    /**
-     *
-     * @var string
-     */
-    protected $openstoreDb;
-
-    /**
-     *
-     * @var string
-     */
-    protected $akilia2Db;
-
-    /**
-     *
-     * @var string
-     */
-    protected $intelaccessDb;
-
-    /**
-     *
-     * @var string
-     */
-    protected $akilia1Db;
-
-    /**
-     *
-     * @var Adapter
+     * @var MysqliAdapter 
      */
     protected $adapter;
+
+    /**
+     *
+     * @var DbExecuter
+     */
+    protected $dbExecuter;
 
     protected $default_currency_id = 1;
 
@@ -93,21 +44,89 @@ class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterfac
 
     protected $default_product_type_id = 1;
 
-
-
-    protected $legacy_synchro_at;
-
     protected $replace_dash_by_newline = false;
 
-    protected $default_language;
-    protected $default_language_sfx;
+    /**
+     * 
+     * @param OpenstoreAkiliaSetup $setup
+     */
+    public function __construct(OpenstoreAkiliaSetup $setup)
+    {
+        $this->setup = $setup;
+        $this->adapter = $setup->getDatabaseAdapter();
+        $this->dbExecuter = new DbExecuter($this->adapter);
+        $this->legacy_synchro_at = date('Y-m-d H:i:s');
+    }
+
+
+    /**
+     * 
+     */
+    public function synchronize()
+    {
+        $namespace = __NAMESPACE__ . '\\Entities';
+        $entities = [
+            'country' => ['class' => $namespace . '\\Country']
+        ];
+
+
+        foreach ($entities as $name => $entity) {
+            /**
+             * @var OpenstoreAkilia\Sync\Entities\AbstractEntity $cls
+             */
+            $cls = $entity['class'];
+
+            $syncEntity = new $cls($this->dbExecuter, $this->setup);
+            $syncEntity->setLegacySynchroAt($this->legacy_synchro_at);
+            $syncEntity->synchronize();
+        }
+    }
+
+    public function synchronizeCountry()
+    {
+        $akilia2db = $this->akilia2Db;
+        $db = $this->openstoreDb;
+
+        $replace = " insert
+                     into $db.country
+                    (
+                    country_id,
+                    reference,
+                    name,
+                    legacy_synchro_at
+                )
+
+                select id,
+                       iso_3166_1,
+                       name,
+                        '{$this->legacy_synchro_at}' as legacy_synchro_at
+                    
+                from $akilia2db.base_country co
+                on duplicate key update
+                        reference = co.iso_3166_1,
+                        name = co.name,
+                        legacy_synchro_at = '{$this->legacy_synchro_at}'
+                     ";
+
+        $this->executeSQL("Replace countries", $replace);
+
+        // 2. Deleting - old links in case it changes
+        $delete = "
+            delete from $db.country 
+            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
+
+        $this->executeSQL("Delete eventual removed countries", $delete);
+    }
+
+
+
 
     /**
      *
      * @param \Doctrine\ORM\EntityManager $em
      * @param Adapter $zendDb
      */
-    public function __construct(\Doctrine\ORM\EntityManager $em, Adapter $zendDb)
+    public function __constructOld(\Doctrine\ORM\EntityManager $em, Adapter $zendDb)
     {
         $this->em = $em;
         $this->openstoreDb = $em->getConnection()->getDatabase();
@@ -118,22 +137,6 @@ class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterfac
         $this->legacy_synchro_at = date('Y-m-d H:i:s');
     }
 
-    /**
-     *
-     * @param array $config
-     * @return \Akilia\Synchronizer
-     */
-    public function setConfiguration(array $config)
-    {
-        $this->akilia2Db = $config['db_akilia2'];
-        $this->akilia1Db = $config['db_akilia1'];
-        $this->intelaccessDb = $config['db_intelaccess'];
-        $this->akilia1lang = $config['akilia1_language_map'];
-        $this->default_language = $config['default_language'];
-        $this->default_language_sfx = $this->akilia1lang[$this->default_language];
-        $this->configuration = $config;
-        return $this;
-    }
 
     public function synchronizeAkilia1ProductDescription()
     {
@@ -155,10 +158,9 @@ class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterfac
         */
     }
 
+
     public function synchronizeAll()
     {
-        $this->synchronizeProductStatTrend();
-
         $this->synchronizeCountry();
         $this->synchronizeCustomer();
         $this->synchronizeApi();
@@ -489,41 +491,6 @@ class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterfac
         $this->synchronizeCustomerPricelist();
     }
 
-    public function synchronizeCountry()
-    {
-        $akilia2db = $this->akilia2Db;
-        $db = $this->openstoreDb;
-
-        $replace = " insert
-                     into $db.country
-                    (
-                    country_id,
-                    reference,
-                    name,
-                    legacy_synchro_at
-                )
-
-                select id,
-                       iso_3166_1,
-                       name,
-                        '{$this->legacy_synchro_at}' as legacy_synchro_at
-                    
-                from $akilia2db.base_country co
-                on duplicate key update
-                        reference = co.iso_3166_1,
-                        name = co.name,
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-
-        $this->executeSQL("Replace countries", $replace);
-
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.country 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-
-        $this->executeSQL("Delete eventual removed countries", $delete);
-    }
 
     public function synchronizeCustomer()
     {
@@ -2272,77 +2239,6 @@ class Synchronizer implements ServiceLocatorAwareInterface, AdapterAwareInterfac
         $this->executeSQL('Rebuild category breadcrumbs', $query);
     }
 
-    /**
-     * Execute a query on the database and logs it
-     *
-     * @throws Exception
-     *
-     * @param string $key
-     *            name of the query
-     * @param string $query
-     * @param boolean $disable_foreign_key_checks
-     * @return void
-     */
-    protected function executeSQL($key, $query, $disable_foreign_key_checks = true)
-    {
-        $this->log("Sync::executeSQL '$key'...\n");
-
-        $total_time_start = microtime(true);
-
-        if ($disable_foreign_key_checks) {
-            $time_start = microtime(true);
-            $this->mysqli->query('set foreign_key_checks=0');
-            $time_stop = microtime(true);
-            $time = number_format(($time_stop - $time_start), 2);
-            $this->log("  * Disabling foreign key checks (in time $time sec(s))\n");
-        }
-
-        $time_start = microtime(true);
-        $result = $this->mysqli->query($query);
-        $affected_rows = $this->mysqli->affected_rows;
-        $time_stop = microtime(true);
-        $time = number_format(($time_stop - $time_start), 2);
-        $this->log("  * Querying database (in time $time sec(s))\n");
-        $formatted_query = preg_replace('/(\n)|(\r)|(\t)/', ' ', $query);
-        $formatted_query = preg_replace('/(\ )+/', ' ', $formatted_query);
-
-        $this->log("  * " . substr($formatted_query, 0, 60));
-
-        if (! $result) {
-            $msg = "Error running query ({$this->mysqli->error}) : \n--------------------\n$query\n------------------\n";
-            $this->log("[+] $msg\n");
-            if ($disable_foreign_key_checks) {
-                $this->log("[Error] Error restoring foreign key checks\n");
-                $this->mysqli->query('set foreign_key_checks=1');
-            }
-            throw new \Exception($msg);
-        }
-
-        if ($disable_foreign_key_checks) {
-            $time_start = microtime(true);
-            $this->mysqli->query('set foreign_key_checks=1');
-            $time_stop = microtime(true);
-            $time = number_format(($time_stop - $time_start), 2);
-            $this->log("  * RESTORING foreign key checks  (in time $time sec(s))\n");
-        }
-        $time_stop = microtime(true);
-        $time = number_format(($time_stop - $total_time_start), 2);
-        $this->log(" [->] Success in ExecuteSQL '$key' in total $time secs, affected rows $affected_rows.\n");
-    }
-
-    /**
-     * Log message
-     *
-     * @param string $message
-     * @param int $priority
-     * @return void
-     */
-    protected function log($message, $priority = null)
-    {
-        if ($this->output_log) {
-            echo "$message\n";
-        }
-    }
 
     /**
      *

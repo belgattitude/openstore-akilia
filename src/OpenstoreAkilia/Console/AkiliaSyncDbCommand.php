@@ -2,8 +2,25 @@
 
 namespace OpenstoreAkilia\Console;
 
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use OpenstoreAkilia\Sync\AkiliaSynchronizer;
+
 class AkiliaSyncDbCommand extends AbstractCommand
 {
+
+    /**
+     * {@inheritdoc}
+     */
+    public function execute(InputInterface $input, OutputInterface $output)
+    {
+        $setup = $this->getOpenstoreAkiliaSetup();
+
+        $synchronizer = new AkiliaSynchronizer($setup);
+        $synchronizer->synchronize();
+    }
+
+
     /**
      * {@inheritdoc}
      */
