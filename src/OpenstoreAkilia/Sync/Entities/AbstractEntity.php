@@ -98,7 +98,7 @@ abstract class AbstractEntity
     {
         $this->legacy_synchro_at = date('Y-m-d H:i:s');
         $this->akilia2Db = $this->setup->getSynchronizerConfig('db_akilia2');
-
+        $this->openstoreDb = $this->setup->getDatabaseAdapter()->getCurrentSchema();
         $this->akilia1Db = $this->setup->getSynchronizerConfig('db_akilia1');
         $this->intelaccessDb = $this->setup->getSynchronizerConfig('db_intelaccess');
         $this->akilia1lang = $this->setup->getSynchronizerConfig('akilia1_language_map');

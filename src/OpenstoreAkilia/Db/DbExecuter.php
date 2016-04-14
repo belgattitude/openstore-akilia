@@ -43,16 +43,13 @@ class DbExecuter
      */
     public function executeSQL($key, $query, $disable_foreign_key_checks = true)
     {
-        $this->log("Sync::executeSQL '$key'...\n");
+        $this->log(" * Sync::executeSQL '$key'...");
 
         $total_time_start = microtime(true);
 
         if ($disable_foreign_key_checks) {
-            $time_start = microtime(true);
             $this->adapter->query('set foreign_key_checks=0');
-            $time_stop = microtime(true);
-            $time = number_format(($time_stop - $time_start), 2);
-            $this->log("  * Disabling foreign key checks (in time $time sec(s))\n");
+            $this->log("  * FK : Foreign key check disabled");
         }
 
         try {
@@ -63,16 +60,16 @@ class DbExecuter
             // Log stuffs
             $time_stop = microtime(true);
             $time = number_format(($time_stop - $time_start), 2);
-            $this->log("  * Querying database (in time $time sec(s))\n");
             $formatted_query = preg_replace('/(\n)|(\r)|(\t)/', ' ', $query);
             $formatted_query = preg_replace('/(\ )+/', ' ', $formatted_query);
-            $this->log("  * " . substr($formatted_query, 0, 60));
+            $this->log("  * SQL: " . substr(trim($formatted_query), 0, 70) . '...') ;
+            $this->log("  * SQL: Query time $time sec(s))");
         } catch (\Exception $e) {
             $err = $e->getMessage();
             $msg = "Error running query ({$err}) : \n--------------------\n$query\n------------------\n";
             $this->log("[+] $msg\n");
             if ($disable_foreign_key_checks) {
-                $this->log("[Error] Error restoring foreign key checks\n");
+                $this->log("[Error] Error restoring foreign key checks");
                 $this->adapter->query('set foreign_key_checks=1');
             }
             throw new \Exception($msg);
@@ -83,11 +80,11 @@ class DbExecuter
             $this->adapter->query('set foreign_key_checks=1');
             $time_stop = microtime(true);
             $time = number_format(($time_stop - $time_start), 2);
-            $this->log("  * RESTORING foreign key checks  (in time $time sec(s))\n");
+            $this->log("  * FK : Foreign keys restored");
         }
         $time_stop = microtime(true);
         $time = number_format(($time_stop - $total_time_start), 2);
-        $this->log(" [->] Success in ExecuteSQL '$key' in total $time secs, affected rows $affected_rows.\n");
+        $this->log(" * Time: $time secs, affected rows $affected_rows.");
     }
 
     /**
