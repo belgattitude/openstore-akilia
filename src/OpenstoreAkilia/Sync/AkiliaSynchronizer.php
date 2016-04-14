@@ -66,7 +66,10 @@ class AkiliaSynchronizer
     {
         $namespace = __NAMESPACE__ . '\\Entities';
         $entities = [
-            'country' => ['class' => $namespace . '\\Country']
+            'country' => ['class' => $namespace . '\\Country'],
+            'customer' => ['class' => $namespace . '\\Customer'],
+            'api' => ['class' => $namespace . '\\Api'],
+            
         ];
 
 
@@ -82,41 +85,6 @@ class AkiliaSynchronizer
         }
     }
 
-    public function synchronizeCountry()
-    {
-        $akilia2db = $this->akilia2Db;
-        $db = $this->openstoreDb;
-
-        $replace = " insert
-                     into $db.country
-                    (
-                    country_id,
-                    reference,
-                    name,
-                    legacy_synchro_at
-                )
-
-                select id,
-                       iso_3166_1,
-                       name,
-                        '{$this->legacy_synchro_at}' as legacy_synchro_at
-                    
-                from $akilia2db.base_country co
-                on duplicate key update
-                        reference = co.iso_3166_1,
-                        name = co.name,
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-
-        $this->executeSQL("Replace countries", $replace);
-
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.country 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-
-        $this->executeSQL("Delete eventual removed countries", $delete);
-    }
 
 
 
@@ -161,9 +129,9 @@ class AkiliaSynchronizer
 
     public function synchronizeAll()
     {
-        $this->synchronizeCountry();
-        $this->synchronizeCustomer();
-        $this->synchronizeApi();
+//done        $this->synchronizeCountry();
+//done        $this->synchronizeCustomer();
+//done        $this->synchronizeApi();
         $this->synchronizePricelist();
         $this->synchronizeCustomerPricelist();
 
@@ -395,164 +363,6 @@ class AkiliaSynchronizer
         echo "-----------------------------------------------------------\n";
     }
 
-    public function synchronizeApi()
-    {
-        $akilia2db = $this->akilia2Db;
-        $db = $this->openstoreDb;
-
-        // Step 1: let's synchronize the api services
-
-        $replace = " insert
-                     into $db.api_service
-                    (
-                    service_id,    reference,    description,
-                    legacy_synchro_at
-                )
-                select id, reference, description,
-                       '{$this->legacy_synchro_at}' as legacy_synchro_at
-                from $akilia2db.api_service apis
-                on duplicate key update
-                        reference = apis.reference,
-                        description = apis.description,
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-        $this->executeSQL("Replace api_service", $replace);
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.api_service 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-        $this->executeSQL("Delete eventual removed api_service", $delete);
-
-        // Step 2: let' synchronize the api keys
-
-        $replace = " insert
-                     into $db.api_key
-                    (
-                    api_id,    api_key, flag_active,
-                    legacy_synchro_at
-                )
-                select id, api_key, is_active,
-                       '{$this->legacy_synchro_at}' as legacy_synchro_at
-                from $akilia2db.auth_api aa
-                on duplicate key update
-                        api_key = aa.api_key,
-                        flag_active = aa.is_active,
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-        $this->executeSQL("Replace api_key", $replace);
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.api_key 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-        $this->executeSQL("Delete eventual removed api_key", $delete);
-
-        // Step 3: api_key_services
-
-        $replace = " insert
-                     into $db.api_key_service
-                    (
-                    id, api_id,    service_id,
-                    legacy_synchro_at
-                )
-                select id, api_id, service_id,
-                       '{$this->legacy_synchro_at}' as legacy_synchro_at
-                from $akilia2db.auth_api_service aas
-                on duplicate key update
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-        $this->executeSQL("Replace api_key_service", $replace);
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.api_key_service 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-        $this->executeSQL("Delete eventual removed api_key_service", $delete);
-
-        // Step 4: api_key_customers
-        $replace = " insert
-                     into $db.api_key_customer
-                    (
-                    id, api_id,    customer_id,
-                    legacy_synchro_at
-                )
-                select distinct id, api_id, customer_id,
-                       '{$this->legacy_synchro_at}' as legacy_synchro_at
-                from $akilia2db.auth_api_customer aac
-                on duplicate key update
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-        $this->executeSQL("Replace api_key_customer", $replace);
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.api_key_customer 
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-        $this->executeSQL("Delete eventual removed api_key_customer", $delete);
-
-        // Resync customer pricelists access
-        $this->synchronizeCustomerPricelist();
-    }
-
-
-    public function synchronizeCustomer()
-    {
-        $akilia2db = $this->akilia2Db;
-        $db = $this->openstoreDb;
-
-        $replace = " insert
-                     into $db.customer
-                    (
-                    customer_id,
-                    reference,
-                    name,
-                    first_name,
-                    flag_active,
-                    street,
-                    street_2,
-                    street_number,
-                    zipcode,
-                    city,
-                    country_id,
-                    legacy_mapping,
-                    legacy_synchro_at
-                )
-
-                select bc.id,
-                       bc.reference,
-                       bc.name,
-                       bc.first_name,
-                       if (bc.flag_archived = 1, 0, 1) as flag_active,
-                       bc.street,
-                       bc.street_2,
-                       bc.street_number,
-                       bc.zipcode,
-                       bc.city,
-                       bc.country_id,
-                       bc.id as legacy_mapping,
-                       '{$this->legacy_synchro_at}' as legacy_synchro_at
-                    
-                from $akilia2db.base_customer bc
-                on duplicate key update
-                       reference = bc.reference,
-                       name = bc.name,
-                       first_name = bc.first_name,
-                       flag_active = if (bc.flag_archived = 1, 0, 1),
-                       street = bc.street,
-                       street_2 = bc.street_2,
-                       street_number = bc.street_number,
-                       zipcode = bc.zipcode,
-                       city = bc.city,
-                       country_id = bc.country_id,                
-                       legacy_synchro_at = '{$this->legacy_synchro_at}'
-                     ";
-
-        $this->executeSQL("Replace customers", $replace);
-
-        // 2. Deleting - old links in case it changes
-        $delete = "
-            delete from $db.customer
-            where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
-
-        $this->executeSQL("Delete eventual removed customers", $delete);
-    }
 
     public function synchronizeCustomerPricelist()
     {
