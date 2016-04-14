@@ -31,13 +31,13 @@ class Country extends AbstractEntity
                         legacy_synchro_at = '{$this->legacy_synchro_at}'
                      ";
 
-        $this->dbExecuter->executeSQL("Replace countries", $replace);
+        $this->dbExecuter->executeSQL("Replace countries", $replace, true, __CLASS__);
 
         // 2. Deleting - old links in case it changes
         $delete = "
             delete from $db.country 
             where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
 
-        $this->dbExecuter->executeSQL("Delete eventual removed countries", $delete);
+        $this->dbExecuter->executeSQL("Delete eventual removed countries", $delete, true, __CLASS__);
     }
 }

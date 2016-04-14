@@ -19,6 +19,12 @@ class DbExecuter
     protected $log_to_stdout = true;
 
     /**
+     *
+     * @var string
+     */
+    protected $last_entity = null;
+
+    /**
      * 
      * @param ZendDb $adapter
      * @param boolean $log_to_stdout
@@ -39,10 +45,18 @@ class DbExecuter
      *            name of the query
      * @param string $query
      * @param boolean $disable_foreign_key_checks
+     * @param string $entity
      * @return void
      */
-    public function executeSQL($key, $query, $disable_foreign_key_checks = true)
+    public function executeSQL($key, $query, $disable_foreign_key_checks = true, $entity=null)
     {
+        if ($entity !== null && $entity != $this->last_entity) {
+            $this->log("------------------------------------------------------");
+            $this->log("Entity: '$entity'");
+            $this->log("------------------------------------------------------");
+            $this->last_entity = $entity;
+        }
+
         $this->log(" * Sync::executeSQL '$key'...");
 
         $total_time_start = microtime(true);
