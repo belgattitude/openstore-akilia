@@ -1,5 +1,7 @@
 <?php
 
+use OpenstoreAkilia\Config\OpenstoreAkiliaSetup;
+
 // Bootstrap
 try {
     // Step 1: init autoloader
@@ -26,46 +28,34 @@ try {
     $configFound = false;
     $configFile = null;
     foreach ($directories as $directory) {
-        $configFile = $directory . DIRECTORY_SEPARATOR . 'openstore-schema-core.config.php';
+        $configFile = $directory . DIRECTORY_SEPARATOR . 'openstore-akilia.config.php';
         if (file_exists($configFile)) {
             $configFound = true;
             break;
         }
     }    
-    
     if (!$found) {
         throw new \Exception("Cannot find configuration file '$configFile'");
     }
-    $config = include $configFile;
-    if (!$config) {
-        throw new \Exception("Cannot parse or empty configuration file '$configFile'");
-    }
+    
+    $setup = OpenstoreAkiliaSetup::loadFromFiles([$configFile]);
+    
 } catch (\Exception $e) {
     echo $e->getMessage() . "\n";
     exit(1);
 }
 
-$setup = new OpenstoreSchema\Core\Tools\Setup($config['database'], $config['paths'], $config['namespace']);
-$setup->setEnvironment($config['env']);
-$setup->setProxyPath($config['proxy_path']);
-
-$em = $setup->getEntityManager();
-
 $cli = new Symfony\Component\Console\Application('openstore-schema-core console', '1.0.0');
 $cli->setCatchExceptions(true);
+
 // commands
-$cli->addCommands(array(
-    
-    new OpenstoreSchema\Core\Tools\Console\Command\Schema\CreateCommand(),
-    new OpenstoreSchema\Core\Tools\Console\Command\Schema\RecreateExtraCommand(),
-    new OpenstoreSchema\Core\Tools\Console\Command\Schema\UpdateCommand(),
-    new OpenstoreSchema\Core\Tools\Console\Command\Schema\DropCommand()
+$cli->addCommands(array(    
+    new OpenstoreAkilia\Console\AkiliaSyncDbCommand(),
 ));
 
 // helpers
 $helpers = array(
-    'db' => new Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper($em->getConnection()),
-    'em' => new Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper($em),
+    'openstore-akilia-setip' => new OpenstoreAkilia\Console\Helper\ConfigurationHelper($setup),
     'question' => new Symfony\Component\Console\Helper\QuestionHelper(),
 );
 foreach ($helpers as $name => $helper) {
@@ -73,5 +63,4 @@ foreach ($helpers as $name => $helper) {
 }
 
 $cli->run();
-//return $cli;
 

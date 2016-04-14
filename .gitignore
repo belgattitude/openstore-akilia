@@ -9,5 +9,5 @@ nbproject
 .settings
 *.bak
 composer.lock
-config/openstore-schema-core.config.php
+config/openstore-akilia.config.php
 vendor

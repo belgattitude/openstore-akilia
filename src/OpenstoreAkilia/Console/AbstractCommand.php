@@ -1,24 +1,16 @@
 <?php
 
 
-namespace OpenstoreSchema\Core\Tools\Console\Command\Schema;
+namespace OpenstoreAkilia\Console;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Command\Command;
-use Doctrine\ORM\Tools\SchemaTool;
+
 
 abstract class AbstractCommand extends Command
 {
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     * @param SchemaTool      $schemaTool
-     * @param array           $metadatas
-     *
-     * @return null|int Null or 0 if everything went fine, or an error code.
-     */
-    abstract protected function executeSchemaCommand(InputInterface $input, OutputInterface $output, SchemaTool $schemaTool, array $metadatas);
+
 
     /**
      * {@inheritdoc}

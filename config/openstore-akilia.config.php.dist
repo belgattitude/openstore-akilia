@@ -4,7 +4,7 @@ return [
     /**
      * Configuration for Akilia
      */
-    'akilia' => [
+    'openstore-akilia' => [
 
         /**
          * Synchronizer settings
