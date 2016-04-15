@@ -19,10 +19,16 @@ return [
             'charset' => 'UTF8'
         ],
 
+        'akilia1' => [
+            'path' => '/path/to/akilia1/www'
+        ],
+
+
         /**
          * Synchronizer
          */
         'synchronizer' => [
+            'entities' => '*', // means all default entities will be synced
             'db_akilia2' => 'akilia2_production',
             'db_akilia1' => 'akilia00',
             /**

@@ -43,9 +43,6 @@ try {
     
     $setup = OpenstoreAkiliaSetup::loadFromFiles([$defaultEntitiesFile, $configFile]);
     
-    var_dump($setup->getConfig());
-    die();
-    
 } catch (\Exception $e) {
     echo $e->getMessage() . "\n";
     exit(1);

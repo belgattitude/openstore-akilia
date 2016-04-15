@@ -60,15 +60,36 @@ class AkiliaSynchronizer
 
 
     /**
-     * 
+     * Return entity configuration
+     * @param array $entity_names
+     * @param boolean $merge_standard
+     * @return array
      */
-    public function synchronize()
+    public function getEntitiesConfig($entity_names=null, $merge_standard=true)
     {
+        $configured_entities = $this->setup->getSynchronizerConfig('entities');
+        $configured_entities = array_merge_recursive($entity_names);
 
-        $entities = $this->setup->getSynchronizerConfig('standard_entities');
-        var_dump($entities);
-        die();
+        if ($entity_names === null) {
+        } else {
+        }
+    }
 
+
+    public function synchronizeAll()
+    {
+        $entities = $this->setup->getMappedSyncEntities();
+
+        $this->synchronize(array_keys($entities));
+    }
+
+    /**
+     * Synchronize entities from config file
+     * @param array $entity_names
+     */
+    public function synchronize(array $entity_names)
+    {
+        $entities = $this->setup->getMappedSyncEntities($entity_names);
         foreach ($entities as $name => $entity) {
             /**
              * @var OpenstoreAkilia\Sync\Entities\AbstractEntity $cls
@@ -123,9 +144,9 @@ class AkiliaSynchronizer
     }
 
 
-    public function synchronizeAll()
+    public function synchronizeAllOld()
     {
-//done        $this->synchronizeCountry();
+        //done        $this->synchronizeCountry();
 //done        $this->synchronizeCustomer();
 //done        $this->synchronizeApi();
         $this->synchronizePricelist();

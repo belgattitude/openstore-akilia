@@ -7,7 +7,6 @@ class Api extends AbstractEntity
 
     public function synchronize()
     {
-        
         $akilia2db = $this->akilia2Db;
         $db = $this->openstoreDb;
 
@@ -100,6 +99,5 @@ class Api extends AbstractEntity
 
         // Resync customer pricelists access
         $this->synchronizeCustomerPricelist();
-        
     }
 }

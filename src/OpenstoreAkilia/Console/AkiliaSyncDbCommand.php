@@ -4,6 +4,7 @@ namespace OpenstoreAkilia\Console;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use OpenstoreAkilia\Sync\AkiliaSynchronizer;
 
 class AkiliaSyncDbCommand extends AbstractCommand
@@ -17,7 +18,22 @@ class AkiliaSyncDbCommand extends AbstractCommand
         $setup = $this->getOpenstoreAkiliaSetup();
 
         $synchronizer = new AkiliaSynchronizer($setup);
-        $synchronizer->synchronize();
+
+        $entities = $input->getOption('entities');
+
+        if (!$entities) {
+            $output->writeln('<error>Error, if you want to sync all entitites use --entities=*</error>');
+            throw new \Exception('Usage Exception');
+        } else {
+            $entities = explode(',', $entities);
+            $entities = array_map('trim', $entities);
+        }
+
+        if (count($entities) == 1 && $entities[0] == '*') {
+            $synchronizer->synchronizeAll();
+        } else {
+            $synchronizer->synchronize($entities);
+        }
     }
 
 
@@ -30,6 +46,15 @@ class AkiliaSyncDbCommand extends AbstractCommand
              ->setDescription(
                  'Synchronize openstore database with akilia db content.'
              )
+        ->setDefinition([
+            new InputOption(
+                'entities',
+                null,
+                InputOption::VALUE_REQUIRED,
+                "Entity(ies) to sync, (separated by comma's) or '*' for all"
+            )
+        ])
+
         ->setHelp(<<<EOT
 Process synchronization from akilia tables to openstore-schema-core tables.
 

@@ -7,7 +7,6 @@ class Customer extends AbstractEntity
 
     public function synchronize()
     {
-        
         $akilia2db = $this->akilia2Db;
         $db = $this->openstoreDb;
 
@@ -66,6 +65,5 @@ class Customer extends AbstractEntity
             where legacy_synchro_at <> '{$this->legacy_synchro_at}' and legacy_synchro_at is not null";
 
         $this->dbExecuter->executeSQL("Delete eventual removed customers", $delete, true, __CLASS__);
-        
     }
 }
