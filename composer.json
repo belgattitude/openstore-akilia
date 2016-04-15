@@ -21,7 +21,6 @@
     },
     "require": {
         "php": ">=5.4.4 || ^7.0",
-        "openstore/schema-core": "dev-master",
         "symfony/console": "^2.6.0 || ^3.0.0",
         "doctrine/orm": ">=2.5,<2.7",
         "doctrine/dbal": ">=2.5,<2.7",        
@@ -30,6 +29,9 @@
         "patchwork/utf8": "^1.3.0",
         "nesbot/carbon": "^1.21.0",
         "soluble/dbwrapper": "^1.2.1"
+    },
+    "require-dev": {
+        "openstore/schema-core": "dev-master"
     },
     "bin": ["bin/openstore-akilia"],
     "archive": {
