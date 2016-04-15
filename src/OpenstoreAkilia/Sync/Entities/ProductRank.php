@@ -205,8 +205,43 @@ class ProductRank extends AbstractEntity
 
         $delete = "delete from product_rank where updated_at <> '$legacy_synchro_at'";
         $adapter->query($delete);
+    
+        $this->updateProductPricelistFlags($adapter);
         
         $this->log("Successfully loaded $cpt new ranking rows");
+    }
+    
+    
+    public function updateProductPricelistFlags(Adapter $adapter) {
+        
+        
+        $delete = "update product_pricelist ppl set " 
+                . " ppl.is_bestseller = null, " 
+                . " ppl.is_deal = null, "
+                . " ppl.is_fresh = null, "
+                . " ppl.is_popular = null, "
+                . " ppl.is_trending = null ";
+                
+        $adapter->query($delete);
+        
+        $update = "update product_pricelist ppl "
+                . "inner join pricelist pl on pl.pricelist_id = ppl.pricelist_id "
+                . "inner join product_rank pr "
+                . " on pr.product_id = ppl.product_id and ppl.pricelist_id = pr.pricelist_id "
+                . "set "
+                . " ppl.is_bestseller = if (pr.bestseller_rank_position > 0, 1, 0), "
+                . " ppl.is_deal = if (pr.deal_rank_position > 0, 1, 0), "
+                . " ppl.is_fresh = if (pr.fresh_rank_position > 0, 1, 0), "
+                . " ppl.is_popular = if (pr.popular_rank_position > 0, 1, 0), "
+                . " ppl.is_trending = if (pr.trending_rank_position > 0, 1, 0)";
+
+
+        $adapter->query($update);
+    
+    
+    
+    
+        
     }
     
     protected function log($message) {
