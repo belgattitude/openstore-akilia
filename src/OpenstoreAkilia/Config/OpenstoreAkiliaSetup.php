@@ -3,6 +3,9 @@
 namespace OpenstoreAkilia\Config;
 
 use Zend\Db\Adapter\Adapter as ZendDb;
+use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceManager;
+
 
 class OpenstoreAkiliaSetup
 {
@@ -130,41 +133,55 @@ class OpenstoreAkiliaSetup
 
         return $path;
     }
-    
+
     /**
      * 
      * @return string
      */
-    public function getOpenbridgePath() {
+    public function getOpenbridgePath()
+    {
         $akilia1_path = $this->getAkilia1Path();
         $ds = DIRECTORY_SEPARATOR;
         $openbridge_path = "{$akilia1_path}{$ds}openbridge";
         if (!is_dir($openbridge_path)) {
             throw new \Exception("Cannot locate openbridge path '$openbridge_path' does not exists.");
         }
-        
+
         return $openbridge_path;
-        
     }
-    
+
     /**
      * 
      * @param string $module_name
      * @return string
      */
-    public function getOpenbridgeModulePath($module_name) {
-        
+    public function getOpenbridgeModulePath($module_name)
+    {
         $openbridge_path = $this->getOpenbridgePath();
         $ds = DIRECTORY_SEPARATOR;
         $module_path = "{$openbridge_path}{$ds}modules{$ds}$module_name";
         if (!is_dir($module_path)) {
             throw new \Exception("Cannot locate openbridge module '$module_name' path '$module_path' does not exists.");
         }
-        
+
         return $module_path;
-        
     }
-    
+
+
+    /**
+     * 
+     * @return ServiceLocatorInterface
+     */
+    public function getServiceLocator()
+    {
+        $sm = new ServiceManager();
+        $sm->setFactory('Zend\Db\Adapter\Adapter', function () {
+            return $this->getDatabaseAdapter();
+        });
+
+        return $sm;
+    }
+
 
     /**
      * Set the database adapter
