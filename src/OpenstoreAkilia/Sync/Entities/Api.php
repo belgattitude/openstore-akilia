@@ -89,7 +89,7 @@ class Api extends AbstractEntity
                        '{$this->legacy_synchro_at}' as legacy_synchro_at
                 from $akilia2db.auth_api_customer aac
                 on duplicate key update
-                        legacy_synchro_at = '{$this->legacy_synchro_at}'
+                        legacy_synchroub_at = '{$this->legacy_synchro_at}'
                      ";
         $this->dbExecuter->executeSQL("Replace api_key_customer", $replace, true, __CLASS__);
         // 2. Deleting - old links in case it changes
