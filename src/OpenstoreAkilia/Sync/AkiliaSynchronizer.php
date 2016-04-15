@@ -65,8 +65,6 @@ class AkiliaSynchronizer
     public function synchronize()
     {
 
-        
-        
         $entities = $this->setup->getSynchronizerConfig('standard_entities');
         var_dump($entities);
         die();
