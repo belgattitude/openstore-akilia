@@ -22,7 +22,7 @@ class ProductRank extends AbstractEntity
         $sql = new Sql($adapter);
         $productRank = new \MkProductRank\Marketing\ProductRank($serviceLocator);
 
-        
+
         $types      = [
                         'popular' => [
                             'rank_column' => 'popular_rank_position'
@@ -47,7 +47,7 @@ class ProductRank extends AbstractEntity
         foreach ($types as $type => $type_config) {
             $initialRankColumns[$type_config['rank_column']] = null;
         }
-        
+
         // Get brands mapping
         $brands_sql = "select pb.brand_id, pb.reference, count(*) nb_active_products "
                 . "from product_brand pb "
@@ -57,7 +57,7 @@ class ProductRank extends AbstractEntity
                 . "  and ppl.flag_active = 1 "
                 . "group by pb.brand_id, pb.reference "
                 . "having nb_active_products > 0";
-        
+
         $brands_map = array_column($adapter->query($brands_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'brand_id', 'reference');
 
         // Get pricelist mapping
@@ -74,8 +74,8 @@ class ProductRank extends AbstractEntity
 
         $pricelists = array_keys($pricelists_map);
         $brands     = array_keys($brands_map);
-        
-        
+
+
 
         $rankings = [];
 
@@ -100,16 +100,16 @@ class ProductRank extends AbstractEntity
                     $params['pricelists'] = [$pricelist];
                     $store = $productRank->getStore($params);
                     $data = $store->getData()->toArray();
-                    
+
                     $log_line = [
                         str_pad($brand, 7, " "),
                         str_pad($pricelist, 5, " ", STR_PAD_RIGHT),
                         str_pad($type, 15, " ", STR_PAD_RIGHT),
                     ];
-                    
-                    $this->log(' - ' . join(' ', $log_line) . str_pad((string) count($data), 3, ' ', STR_PAD_LEFT) . " products");
-                    
-                    
+
+                    $this->log(' - ' . implode(' ', $log_line) . str_pad((string) count($data), 3, ' ', STR_PAD_LEFT) . " products");
+
+
                     $rank_column = $type_config['rank_column'];
 
                     $matches = [];
@@ -124,7 +124,7 @@ class ProductRank extends AbstractEntity
                                     'category_id'  => $categories_map[$category_reference],
                                     'pricelist_id' => $pricelist_id,
                                     'brand_id'     => $brand_id,
-                                    
+
                                  ], $initialRankColumns);
                         }
                         $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column] = $row['rank'];
@@ -133,7 +133,7 @@ class ProductRank extends AbstractEntity
             }
         }
 
-        
+
         // SAVE RESULTS IN DATABASE
         $legacy_synchro_at = $this->legacy_synchro_at;
         $replace = "INSERT INTO product_rank"
@@ -172,13 +172,13 @@ class ProductRank extends AbstractEntity
                 . " trending_rank_position = VALUES(trending_rank_position),"
                 . " mostrated_rank_position = VALUES(deal_rank_position),"
                 . " updated_at = '$legacy_synchro_at'";
-        
+
         $replace_stmt = preg_replace('/(:[a-z\_]+)/', '?', $replace);
         $stmt = $adapter->createStatement($replace_stmt);
         $stmt->prepare();
         $insert_data = [];
         $cpt =0;
-        
+
         foreach ($rankings as $pricelist => $ranking_brands) {
             foreach ($ranking_brands as $brand => $ranking_categories) {
                 foreach ($ranking_categories as $category => $ranking_products) {
@@ -205,24 +205,24 @@ class ProductRank extends AbstractEntity
 
         $delete = "delete from product_rank where updated_at <> '$legacy_synchro_at'";
         $adapter->query($delete);
-    
+
         $this->updateProductPricelistFlags($adapter);
-        
+
         $this->log("Successfully loaded $cpt new ranking rows");
     }
-    
-    
-    public function updateProductPricelistFlags(Adapter $adapter) {
-        
-        $delete = "update product_pricelist ppl set " 
-                . " ppl.is_bestseller = null, " 
+
+
+    public function updateProductPricelistFlags(Adapter $adapter)
+    {
+        $delete = "update product_pricelist ppl set "
+                . " ppl.is_bestseller = null, "
                 . " ppl.is_deal = null, "
                 . " ppl.is_fresh = null, "
                 . " ppl.is_popular = null, "
                 . " ppl.is_trending = null ";
-                
+
         $adapter->query($delete);
-        
+
         $update = "update product_pricelist ppl "
                 . "inner join pricelist pl on pl.pricelist_id = ppl.pricelist_id "
                 . "inner join product_rank pr "
@@ -236,15 +236,10 @@ class ProductRank extends AbstractEntity
 
 
         $adapter->query($update);
-    
-    
-    
-    
-        
     }
-    
-    protected function log($message) {
-        
+
+    protected function log($message)
+    {
         echo $message . "\n";
     }
 
