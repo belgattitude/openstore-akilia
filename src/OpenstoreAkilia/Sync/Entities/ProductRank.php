@@ -22,10 +22,6 @@ class ProductRank extends AbstractEntity
         $sql = new Sql($adapter);
         $productRank = new \MkProductRank\Marketing\ProductRank($serviceLocator);
 
-        $pricelists = ['BE', 'FR', 'NL', 'DE', '100B', 'US'];
-        $brands     = ['STAG', 'REMO', 'ANGE', 'JAME', 'LARO'];
-        
-//        $pricelists = ['BE']; $brands = ['REMO'];
         
         $types      = [
                         'popular' => [
@@ -51,19 +47,35 @@ class ProductRank extends AbstractEntity
         foreach ($types as $type => $type_config) {
             $initialRankColumns[$type_config['rank_column']] = null;
         }
-
+        
         // Get brands mapping
-        $brands_sql = "select brand_id, reference from product_brand";
+        $brands_sql = "select pb.brand_id, pb.reference, count(*) nb_active_products "
+                . "from product_brand pb "
+                . "inner join product p on p.brand_id = pb.brand_id "
+                . "inner join product_pricelist ppl on ppl.product_id = p.product_id "
+                . "where pb.flag_active = 1 "
+                . "  and ppl.flag_active = 1 "
+                . "group by pb.brand_id, pb.reference "
+                . "having nb_active_products > 0";
+        
         $brands_map = array_column($adapter->query($brands_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'brand_id', 'reference');
 
         // Get pricelist mapping
-        $pricelists_sql = "select pricelist_id, reference from pricelist";
+        $pricelists_sql = "select pl.pricelist_id, pl.reference, count(*) "
+                . "from pricelist pl inner join product_pricelist ppl on ppl.pricelist_id = pl.pricelist_id "
+                . "where pl.flag_active = 1 and ppl.flag_active = 1 "
+                . "group by pl.pricelist_id, pl.reference "
+                . "having count(*) > 0";
         $pricelists_map = array_column($adapter->query($pricelists_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'pricelist_id', 'reference');
 
         // Get category mapping
-        $categories_sql = "select category_id, reference from product_category";
+        $categories_sql = "select category_id, reference from product_category where flag_rankable = 1";
         $categories_map = array_column($adapter->query($categories_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'category_id', 'reference');
 
+        $pricelists = array_keys($pricelists_map);
+        $brands     = array_keys($brands_map);
+        
+        
 
         $rankings = [];
 
@@ -87,7 +99,17 @@ class ProductRank extends AbstractEntity
                     $params['brands'] = [$brand];
                     $params['pricelists'] = [$pricelist];
                     $store = $productRank->getStore($params);
-                    $data = $store->getData();
+                    $data = $store->getData()->toArray();
+                    
+                    $log_line = [
+                        str_pad($brand, 7, " "),
+                        str_pad($pricelist, 5, " ", STR_PAD_RIGHT),
+                        str_pad($type, 15, " ", STR_PAD_RIGHT),
+                    ];
+                    
+                    $this->log(' - ' . join(' ', $log_line) . str_pad((string) count($data), 3, ' ', STR_PAD_LEFT) . " products");
+                    
+                    
                     $rank_column = $type_config['rank_column'];
 
                     $matches = [];
@@ -103,10 +125,9 @@ class ProductRank extends AbstractEntity
                                     'pricelist_id' => $pricelist_id,
                                     'brand_id'     => $brand_id,
                                     
-                                    
                                  ], $initialRankColumns);
                         }
-                        $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column]   = $row['rank'];
+                        $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column] = $row['rank'];
                     }
                 }
             }
@@ -182,7 +203,15 @@ class ProductRank extends AbstractEntity
             }
         }
 
-        echo "Affected rows $cpt";
+        $delete = "delete from product_rank where updated_at <> '$legacy_synchro_at'";
+        $adapter->query($delete);
+        
+        $this->log("Successfully loaded $cpt new ranking rows");
+    }
+    
+    protected function log($message) {
+        
+        echo $message . "\n";
     }
 
 
