@@ -214,7 +214,6 @@ class ProductRank extends AbstractEntity
     
     public function updateProductPricelistFlags(Adapter $adapter) {
         
-        
         $delete = "update product_pricelist ppl set " 
                 . " ppl.is_bestseller = null, " 
                 . " ppl.is_deal = null, "
