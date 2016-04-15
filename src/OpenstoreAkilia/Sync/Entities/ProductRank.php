@@ -24,6 +24,9 @@ class ProductRank extends AbstractEntity
 
         $pricelists = ['BE', 'FR', 'NL', 'DE', '100B', 'US'];
         $brands     = ['STAG', 'REMO', 'ANGE', 'JAME', 'LARO'];
+        
+//        $pricelists = ['BE']; $brands = ['REMO'];
+        
         $types      = [
                         'popular' => [
                             'rank_column' => 'popular_rank_position'
@@ -95,10 +98,12 @@ class ProductRank extends AbstractEntity
                         if (!isset($rankings[$pricelist][$brand][$category_reference][$product_id])) {
                             $rankings[$pricelist][$brand][$category_reference][$product_id] =
                                  array_merge([
+                                    'product_id'   => $product_id,
+                                    'category_id'  => $categories_map[$category_reference],
                                     'pricelist_id' => $pricelist_id,
                                     'brand_id'     => $brand_id,
-                                    'category_id'  => $categories_map[$category_reference],
-                                    'product_id'   => $product_id,
+                                    
+                                    
                                  ], $initialRankColumns);
                         }
                         $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column]   = $row['rank'];
@@ -107,26 +112,77 @@ class ProductRank extends AbstractEntity
             }
         }
 
+        
+        // SAVE RESULTS IN DATABASE
+        $legacy_synchro_at = $this->legacy_synchro_at;
+        $replace = "INSERT INTO product_rank"
+                . "(product_id, "
+                . " rankable_category_id, "
+                . " pricelist_id, "
+                . " brand_id,"
+                . " deal_rank_position, "
+                . " fresh_rank_position, "
+                . " bestseller_rank_position, "
+                . " popular_rank_position, "
+                . " trending_rank_position, "
+                . " mostrated_rank_position, "
+                . " created_at, "
+                . " updated_at"
+                . ") "
+                . "VALUES ("
+                . " :product_id, "
+                . " :category_id, "
+                . " :pricelist_id, "
+                . " :brand_id,"
+                . " :deal_rank_position,"
+                . " :fresh_rank_position,"
+                . " :bestseller_rank_position,"
+                . " :popular_rank_position,"
+                . " :trending_rank_position,"
+                . " :mostrated_rank_position,"
+                . " '$legacy_synchro_at',"
+                . " '$legacy_synchro_at'"
+                . ") "
+                . "ON DUPLICATE KEY UPDATE "
+                . " deal_rank_position = VALUES(deal_rank_position),"
+                . " fresh_rank_position = VALUES(fresh_rank_position),"
+                . " bestseller_rank_position = VALUES(bestseller_rank_position),"
+                . " popular_rank_position = VALUES(popular_rank_position),"
+                . " trending_rank_position = VALUES(trending_rank_position),"
+                . " mostrated_rank_position = VALUES(deal_rank_position),"
+                . " updated_at = '$legacy_synchro_at'";
+        
+        $replace_stmt = preg_replace('/(:[a-z\_]+)/', '?', $replace);
+        $stmt = $adapter->createStatement($replace_stmt);
+        $stmt->prepare();
         $insert_data = [];
+        $cpt =0;
+        
         foreach ($rankings as $pricelist => $ranking_brands) {
             foreach ($ranking_brands as $brand => $ranking_categories) {
                 foreach ($ranking_categories as $category => $ranking_products) {
                     foreach ($ranking_products as $product_id => $to_update) {
-                        var_dump($to_update);
-                        die();
-                        $insert_data[] = array_values($to_update);
+                        //$insert_data[] = $to_update;
+                        $parameters = [
+                            $to_update['product_id'],
+                            $to_update['category_id'],
+                            $to_update['pricelist_id'],
+                            $to_update['brand_id'],
+                            isset($to_update['deal_rank_position']) ? $to_update['deal_rank_position'] : null,
+                            isset($to_update['fresh_rank_position']) ? $to_update['fresh_rank_position'] : null,
+                            isset($to_update['bestseller_rank_position']) ? $to_update['bestseller_rank_position'] : null,
+                            isset($to_update['popular_rank_position']) ? $to_update['popular_rank_position'] : null,
+                            isset($to_update['trending_rank_position']) ? $to_update['trending_rank_position'] : null,
+                            isset($to_update['mostrated_rank_position']) ? $to_update['mostrated_rank_position'] : null,
+                        ];
+                        $stmt->execute($parameters);
+                        $cpt++;
                     }
                 }
             }
         }
-        var_dump($insert_data);
-        die();
-        die();
 
-
-        die();
-        var_dump($productRank);
-        die();
+        echo "Affected rows $cpt";
     }
 
 

@@ -53,10 +53,10 @@ class OpenstoreAkiliaSetupTest extends \PHPUnit_Framework_TestCase
 
         $loaded2 = OpenstoreAkiliaSetup::loadFromFiles($this->getConfigFiles());
         $cfg2 = $loaded2->getConfig();
-        $this->assertArrayHasKey('standard_entities', $cfg2['synchronizer']);
+        $this->assertArrayHasKey('entities_map', $cfg2['synchronizer']);
 
 
-        $standard_entities_config = $loaded2->getSynchronizerConfig('standard_entities');
+        $standard_entities_config = $loaded2->getSynchronizerConfig('entities_map');
         $this->assertInternalType('array', $standard_entities_config);
     }
 
