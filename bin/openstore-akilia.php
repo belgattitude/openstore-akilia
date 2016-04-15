@@ -38,7 +38,13 @@ try {
         throw new \Exception("Cannot find configuration file '$configFile'");
     }
     
-    $setup = OpenstoreAkiliaSetup::loadFromFiles([$configFile]);
+    $ds = DIRECTORY_SEPARATOR;
+    $defaultEntitiesFile = __DIR__ . "{$ds}..{$ds}config{$ds}openstore-akilia-standard-sync-entities.config.php";
+    
+    $setup = OpenstoreAkiliaSetup::loadFromFiles([$defaultEntitiesFile, $configFile]);
+    
+    var_dump($setup->getConfig());
+    die();
     
 } catch (\Exception $e) {
     echo $e->getMessage() . "\n";

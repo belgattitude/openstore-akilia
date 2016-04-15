@@ -46,6 +46,7 @@ class OpenstoreAkiliaSetup
      */
     public static function loadFromFiles(array $files)
     {
+        
         $checked_files = [];
         $configs = [];
         $config = [];
@@ -61,8 +62,9 @@ class OpenstoreAkiliaSetup
                 throw new \Exception("Config file lacks a required 'openstore-akilia' top level key in file '$file'.");
             }
 
-            $config = array_merge($config, $configs[$idx]['openstore-akilia']);
+            $config = array_merge_recursive($config, $configs[$idx]['openstore-akilia']);
         }
+        
         return new OpenstoreAkiliaSetup($config);
     }
 

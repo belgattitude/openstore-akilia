@@ -64,14 +64,12 @@ class AkiliaSynchronizer
      */
     public function synchronize()
     {
-        $namespace = __NAMESPACE__ . '\\Entities';
-        $entities = [
-            'country' => ['class' => $namespace . '\\Country'],
-            'customer' => ['class' => $namespace . '\\Customer'],
-            'api' => ['class' => $namespace . '\\Api'],
-            
-        ];
 
+        
+        
+        $entities = $this->setup->getSynchronizerConfig('standard_entities');
+        var_dump($entities);
+        die();
 
         foreach ($entities as $name => $entity) {
             /**
