@@ -52,7 +52,14 @@ class AkiliaSyncDbCommand extends AbstractCommand
                 null,
                 InputOption::VALUE_REQUIRED,
                 "Entity(ies) to sync, (separated by comma's) or '*' for all"
+            ),
+            new InputOption(
+                'config',
+                null,
+                InputOption::VALUE_REQUIRED,
+                "Entity(ies) to sync, (separated by comma's) or '*' for all"
             )
+            
         ])
 
         ->setHelp(<<<EOT

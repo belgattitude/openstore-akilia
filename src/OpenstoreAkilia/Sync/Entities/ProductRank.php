@@ -25,21 +25,21 @@ class ProductRank extends AbstractEntity
 
         $types      = [
                         'popular' => [
-                            'rank_column' => 'popular_rank_position'
+                            'rank_column' => 'popular_rank'
                         ],
                         'fresh' => [
-                            'rank_column' => 'fresh_rank_position'
+                            'rank_column' => 'fresh_rank'
                         ],
                         'deals' => [
-                            'rank_column' => 'deal_rank_position'
+                            'rank_column' => 'deal_rank'
                         ],
             // trending and mostrated not working for now
                         /*
                         'trending' => [
-                            'rank_column' => 'trending_rank_position'
+                            'rank_column' => 'trending_rank'
                         ],*/
                         'bestseller' => [
-                            'rank_column' => 'bestseller_rank_position'
+                            'rank_column' => 'bestseller_rank'
                         ]
         ];
 
@@ -59,6 +59,9 @@ class ProductRank extends AbstractEntity
                 . "having nb_active_products > 0";
 
         $brands_map = array_column($adapter->query($brands_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'brand_id', 'reference');
+        
+        // The null special brand
+        $brands_map['NULLBRAND'] = 'NULLBRAND';
 
         // Get pricelist mapping
         $pricelists_sql = "select pl.pricelist_id, pl.reference, count(*) "
@@ -74,8 +77,6 @@ class ProductRank extends AbstractEntity
 
         $pricelists = array_keys($pricelists_map);
         $brands     = array_keys($brands_map);
-
-
 
         $rankings = [];
 
@@ -96,7 +97,12 @@ class ProductRank extends AbstractEntity
 
                 foreach ($types as $type => $type_config) {
                     $params = $this->getTypeParams($type);
-                    $params['brands'] = [$brand];
+                    
+                    if ($brand == 'NULLBRAND') {
+                        $params['brands'] = null;
+                    } else {
+                        $params['brands'] = [$brand];
+                    }
                     $params['pricelists'] = [$pricelist];
                     $store = $productRank->getStore($params);
                     $data = $store->getData()->toArray();
@@ -109,7 +115,6 @@ class ProductRank extends AbstractEntity
 
                     $this->log(' - ' . implode(' ', $log_line) . str_pad((string) count($data), 3, ' ', STR_PAD_LEFT) . " products");
 
-
                     $rank_column = $type_config['rank_column'];
 
                     $matches = [];
@@ -118,6 +123,11 @@ class ProductRank extends AbstractEntity
                         $product_id = $row['product_id'];
                         // initialize
                         if (!isset($rankings[$pricelist][$brand][$category_reference][$product_id])) {
+                            
+                            if ($brand_id == 'NULLBRAND') {
+                                $brand_id = null;
+                            } 
+                            
                             $rankings[$pricelist][$brand][$category_reference][$product_id] =
                                  array_merge([
                                     'product_id'   => $product_id,
@@ -141,12 +151,12 @@ class ProductRank extends AbstractEntity
                 . " rankable_category_id, "
                 . " pricelist_id, "
                 . " brand_id,"
-                . " deal_rank_position, "
-                . " fresh_rank_position, "
-                . " bestseller_rank_position, "
-                . " popular_rank_position, "
-                . " trending_rank_position, "
-                . " mostrated_rank_position, "
+                . " deal_rank, "
+                . " fresh_rank, "
+                . " bestseller_rank, "
+                . " popular_rank, "
+                . " trending_rank, "
+                . " mostrated_rank, "
                 . " created_at, "
                 . " updated_at"
                 . ") "
@@ -155,22 +165,22 @@ class ProductRank extends AbstractEntity
                 . " :category_id, "
                 . " :pricelist_id, "
                 . " :brand_id,"
-                . " :deal_rank_position,"
-                . " :fresh_rank_position,"
-                . " :bestseller_rank_position,"
-                . " :popular_rank_position,"
-                . " :trending_rank_position,"
-                . " :mostrated_rank_position,"
+                . " :deal_rank,"
+                . " :fresh_rank,"
+                . " :bestseller_rank,"
+                . " :popular_rank,"
+                . " :trending_rank,"
+                . " :mostrated_rank,"
                 . " '$legacy_synchro_at',"
                 . " '$legacy_synchro_at'"
                 . ") "
                 . "ON DUPLICATE KEY UPDATE "
-                . " deal_rank_position = VALUES(deal_rank_position),"
-                . " fresh_rank_position = VALUES(fresh_rank_position),"
-                . " bestseller_rank_position = VALUES(bestseller_rank_position),"
-                . " popular_rank_position = VALUES(popular_rank_position),"
-                . " trending_rank_position = VALUES(trending_rank_position),"
-                . " mostrated_rank_position = VALUES(deal_rank_position),"
+                . " deal_rank = VALUES(deal_rank),"
+                . " fresh_rank = VALUES(fresh_rank),"
+                . " bestseller_rank = VALUES(bestseller_rank),"
+                . " popular_rank = VALUES(popular_rank),"
+                . " trending_rank = VALUES(trending_rank),"
+                . " mostrated_rank = VALUES(deal_rank),"
                 . " updated_at = '$legacy_synchro_at'";
 
         $replace_stmt = preg_replace('/(:[a-z\_]+)/', '?', $replace);
@@ -189,12 +199,12 @@ class ProductRank extends AbstractEntity
                             $to_update['category_id'],
                             $to_update['pricelist_id'],
                             $to_update['brand_id'],
-                            isset($to_update['deal_rank_position']) ? $to_update['deal_rank_position'] : null,
-                            isset($to_update['fresh_rank_position']) ? $to_update['fresh_rank_position'] : null,
-                            isset($to_update['bestseller_rank_position']) ? $to_update['bestseller_rank_position'] : null,
-                            isset($to_update['popular_rank_position']) ? $to_update['popular_rank_position'] : null,
-                            isset($to_update['trending_rank_position']) ? $to_update['trending_rank_position'] : null,
-                            isset($to_update['mostrated_rank_position']) ? $to_update['mostrated_rank_position'] : null,
+                            isset($to_update['deal_rank']) ? $to_update['deal_rank'] : null,
+                            isset($to_update['fresh_rank']) ? $to_update['fresh_rank'] : null,
+                            isset($to_update['bestseller_rank']) ? $to_update['bestseller_rank'] : null,
+                            isset($to_update['popular_rank']) ? $to_update['popular_rank'] : null,
+                            isset($to_update['trending_rank']) ? $to_update['trending_rank'] : null,
+                            isset($to_update['mostrated_rank']) ? $to_update['mostrated_rank'] : null,
                         ];
                         $stmt->execute($parameters);
                         $cpt++;
@@ -215,11 +225,11 @@ class ProductRank extends AbstractEntity
     public function updateProductPricelistFlags(Adapter $adapter)
     {
         $delete = "update product_pricelist ppl set "
-                . " ppl.is_bestseller = null, "
-                . " ppl.is_deal = null, "
-                . " ppl.is_fresh = null, "
-                . " ppl.is_popular = null, "
-                . " ppl.is_trending = null ";
+                . " ppl.bestseller_rank = null, "
+                . " ppl.deal_rank = null, "
+                . " ppl.fresh_rank = null, "
+                . " ppl.popular_rank = null, "
+                . " ppl.trending_rank = null ";
 
         $adapter->query($delete);
 
@@ -228,11 +238,12 @@ class ProductRank extends AbstractEntity
                 . "inner join product_rank pr "
                 . " on pr.product_id = ppl.product_id and ppl.pricelist_id = pr.pricelist_id "
                 . "set "
-                . " ppl.is_bestseller = if (pr.bestseller_rank_position > 0, 1, 0), "
-                . " ppl.is_deal = if (pr.deal_rank_position > 0, 1, 0), "
-                . " ppl.is_fresh = if (pr.fresh_rank_position > 0, 1, 0), "
-                . " ppl.is_popular = if (pr.popular_rank_position > 0, 1, 0), "
-                . " ppl.is_trending = if (pr.trending_rank_position > 0, 1, 0)";
+                . " ppl.bestseller_rank = if (pr.bestseller_rank > 0, 1, 0), "
+                . " ppl.deal_rank = if (pr.deal_rank > 0, 1, 0), "
+                . " ppl.fresh_rank = if (pr.fresh_rank > 0, 1, 0), "
+                . " ppl.popular_rank = if (pr.popular_rank > 0, 1, 0), "
+                . " ppl.trending_rank = if (pr.trending_rank > 0, 1, 0)"
+                . "where pr.brand_id is null";
 
 
         $adapter->query($update);
