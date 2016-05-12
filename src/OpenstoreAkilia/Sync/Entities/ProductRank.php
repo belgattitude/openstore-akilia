@@ -107,6 +107,9 @@ class ProductRank extends AbstractEntity
                     $store = $productRank->getStore($params);
                     $data = $store->getData()->toArray();
 
+                    if (count($data) > 0) {
+                        //var_dump($data); die();
+                    }
                     $log_line = [
                         str_pad($brand, 7, " "),
                         str_pad($pricelist, 5, " ", STR_PAD_RIGHT),
@@ -127,17 +130,21 @@ class ProductRank extends AbstractEntity
                             if ($brand_id == 'NULLBRAND') {
                                 $brand_id = null;
                             } 
-                            
+                           
                             $rankings[$pricelist][$brand][$category_reference][$product_id] =
                                  array_merge([
                                     'product_id'   => $product_id,
                                     'category_id'  => $categories_map[$category_reference],
                                     'pricelist_id' => $pricelist_id,
                                     'brand_id'     => $brand_id,
+                                    'total_recorded_quantity' => $row['product_total_qty_last_12_months'],
+                                    'total_recorded_turnover' => $row['product_total_last_12_months'],
+                                    'nb_customers' => $row['product_nb_customers_last_12_months']
 
                                  ], $initialRankColumns);
                         }
                         $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column] = $row['rank'];
+ 
                     }
                 }
             }
@@ -151,6 +158,9 @@ class ProductRank extends AbstractEntity
                 . " rankable_category_id, "
                 . " pricelist_id, "
                 . " brand_id,"
+                . " total_recorded_quantity, "
+                . " total_recorded_turnover, "
+                . " nb_customers, "                
                 . " deal_rank, "
                 . " fresh_rank, "
                 . " bestseller_rank, "
@@ -165,6 +175,9 @@ class ProductRank extends AbstractEntity
                 . " :category_id, "
                 . " :pricelist_id, "
                 . " :brand_id,"
+                . " :total_recorded_quantity, "
+                . " :total_recorded_turnover, "
+                . " :nb_customers, "                
                 . " :deal_rank,"
                 . " :fresh_rank,"
                 . " :bestseller_rank,"
@@ -175,6 +188,9 @@ class ProductRank extends AbstractEntity
                 . " '$legacy_synchro_at'"
                 . ") "
                 . "ON DUPLICATE KEY UPDATE "
+                . " total_recorded_quantity = VALUES(total_recorded_quantity),"
+                . " total_recorded_turnover = VALUES(total_recorded_turnover),"
+                . " nb_customers = VALUES(nb_customers),"                
                 . " deal_rank = VALUES(deal_rank),"
                 . " fresh_rank = VALUES(fresh_rank),"
                 . " bestseller_rank = VALUES(bestseller_rank),"
@@ -199,6 +215,10 @@ class ProductRank extends AbstractEntity
                             $to_update['category_id'],
                             $to_update['pricelist_id'],
                             $to_update['brand_id'],
+                            $to_update['total_recorded_quantity'],
+                            $to_update['total_recorded_turnover'],
+                            $to_update['nb_customers'],
+  
                             isset($to_update['deal_rank']) ? $to_update['deal_rank'] : null,
                             isset($to_update['fresh_rank']) ? $to_update['fresh_rank'] : null,
                             isset($to_update['bestseller_rank']) ? $to_update['bestseller_rank'] : null,
@@ -206,16 +226,19 @@ class ProductRank extends AbstractEntity
                             isset($to_update['trending_rank']) ? $to_update['trending_rank'] : null,
                             isset($to_update['mostrated_rank']) ? $to_update['mostrated_rank'] : null,
                         ];
+                        //var_dump($paramters); die();
                         $stmt->execute($parameters);
                         $cpt++;
                     }
                 }
             }
         }
-
+        
         $delete = "delete from product_rank where updated_at <> '$legacy_synchro_at'";
-        $adapter->query($delete);
-
+        
+       
+        $ret = $adapter->query($delete)->execute();
+       
         $this->updateProductPricelistFlags($adapter);
 
         $this->log("Successfully loaded $cpt new ranking rows");
