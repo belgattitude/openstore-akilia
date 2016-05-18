@@ -196,7 +196,7 @@ class ProductRank extends AbstractEntity
                 . " bestseller_rank = VALUES(bestseller_rank),"
                 . " popular_rank = VALUES(popular_rank),"
                 . " trending_rank = VALUES(trending_rank),"
-                . " mostrated_rank = VALUES(deal_rank),"
+                . " mostrated_rank = VALUES(mostrated_rank),"
                 . " updated_at = '$legacy_synchro_at'";
 
         $replace_stmt = preg_replace('/(:[a-z\_]+)/', '?', $replace);
