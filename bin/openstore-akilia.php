@@ -23,7 +23,10 @@ try {
 
     // Step 2 : init configuration
 
-    $directories = array(getcwd(), getcwd() . DIRECTORY_SEPARATOR . 'config');
+    $directories = [
+        getcwd() . DIRECTORY_SEPARATOR . 'config',
+        DIRNAME(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'config'
+    ];
 
     $configFound = false;
     $configFile = null;
