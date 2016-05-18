@@ -15,7 +15,7 @@ Openstore/Akilia binding support
 Via composer
 
 ```sh
-$ composer require openstore/openstore-akilia:dev-master
+$ composer require belgattitude/openstore-akilia:dev-master
 ```
     
 
