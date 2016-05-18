@@ -6,7 +6,7 @@ return [
      */
     'openstore-akilia' => [
         /**
-         * Optionnal db params
+         * Optional db params
          * see zend db adapter format
          */
         'adapter' => [
@@ -19,13 +19,19 @@ return [
             'charset' => 'UTF8'
         ],
 
+        /**
+         * Akilia configuration
+         * - Set the path for akilia1 installation
+         */
         'akilia1' => [
-            'path' => '/path/to/akilia1/www'
+            'path' => '/path/to/akilia/www'
         ],
 
 
         /**
          * Synchronizer
+         * - Set the databases for openstore, intelaccess and akilia
+         * - Set the language mappings
          */
         'synchronizer' => [
             'entities' => '*', // means all default entities will be synced
@@ -50,47 +56,9 @@ return [
              * not have a translation
              */
             'default_language' => 'en',
-            'options' => [
-                'product_stock' => [
-                        'enabled' => false,
-                        'elements' =>  [
-                                'BELGIUM' => [ 'akilia1db' => 'emd00', 'pricelist' => 'BE'],
-                                'USA' => ['akilia1db' => 'emd01', 'pricelist' => 'US'],
-                                //'FOSHAN'  => array('akilia1db' => 'emd04', 'pricelist' => '1F'),
-                        ]
-                ],
-                'product_pricelist' => [
-                        'enabled' => true,
-                        'elements' =>  [
-                            // Akilia 1 database
-                            'EUROPE'    => ['akilia1db' => 'emd00', 'pricelists' => ['BE','DE','FR','NL','AT','IE','ES','GB','IT','DK']],
-                            'UK'        => ['akilia1db' => 'emd02', 'pricelists' => ['GB']],
-                            'USA'       => ['akilia1db' => 'emd01', 'pricelists' => ['US']],
-                            //'CANADA'    => ['akilia1db' => 'emd05', 'pricelists' => ['CA']],
-                            //'EXPORT'    => ['akilia1db' => 'emd04', 'pricelists' => ['1B','2B','1U','2U','1F','2F']],
-                            //'CHINA'     => ['akilia1db' => 'emd20', 'pricelists' => ['20F','20U']]
-                        ]
-                ],
-                'product_translation' => [
-                        'enabled' => false
-                ],
-                'product_stat_trend' => [
-                    'enabled' => true,
-                    'akilia1db' => 'emd00'
-                ]
-
-            ],
         ],
         'product_picture_path' => '/web/data/images/emdproducts',
-        'archive_product_picture_path' => '/web/data/images/emdarchive',
-        'checker' => [
-            'pricelists' => [
-                'BE' => ['database' => 'emd00'],
-                'DE' => ['database' => 'emd00'],
-                'NL' => ['database' => 'emd00'],
-            ]
-        ]
-
+        'archive_product_picture_path' => '/web/data/images/emdarchive'
 
     ],
 ];

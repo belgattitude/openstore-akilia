@@ -17,6 +17,27 @@ Via composer
 ```sh
 $ composer require belgattitude/openstore-akilia:dev-master
 ```
-    
 
-	
+Or clone and install with composer
+
+```sh
+$ git clone https://github.com/belgattitude/openstore-akilia.git
+$ composer update
+```
+
+### Configuration
+
+Copy dist configuration file
+
+```sh
+cd openstore-akilia/config
+cp openstore-akilia.config.php.dist openstore-akilia.config.php
+```
+
+Edit the values for your setup.
+
+## Running a synchronization
+
+```sh
+$ ./bin/openstore-akilia openstore:akilia:syncdb --entities product_rank,country
+```
