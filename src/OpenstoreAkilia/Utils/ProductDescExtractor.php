@@ -78,7 +78,11 @@ class ProductDescExtractor
             $text = strtolower(str_replace("\n", ' ', $row['description'] . ' ' . $row['characteristic']));
             $text = str_replace(' :', ':', $text);
             $text = str_replace(',', '.', $text);
-            if (substr_count($text, ' weight:') == 1) {
+
+
+
+            if (substr_count($text, ' weight:') == 1 &&
+                substr_count($text, ' gross weight') == 0) {
                 if (preg_match_all('/(\ weight:\ ?(([0-9]+(\.[0-9]+)?)\ ?(kilogram|gram|kg|g)))/', $text, $matches)) {
                     $unit = $matches[5][0];
                     if (in_array($unit, ['g', 'gram'])) {
@@ -132,6 +136,7 @@ class ProductDescExtractor
                 $text = str_replace(' :', ':', $text);
                 $text = str_replace('*', 'x', $text);
                 $text = str_replace(',', '.', $text);
+                $text = str_replace(' x ', 'x', $text);
                 $matched = preg_match_all('/([0-9]+(\.[0-9]+)?)x([0-9]+(\.[0-9]+)?)(x([0-9]+(\.[0-9]+)?))?\ ?(meter|millimeter|centimer|cm|mm|m)/', $text, $matches);
 
                 if ($matched == 1) {
@@ -148,6 +153,14 @@ class ProductDescExtractor
                     }
                     $length = $matches[1][0] / $multiplier;
                     $width  = $matches[3][0] / $multiplier;
+
+                    if ($width > $length) {
+                        // swap values
+                        $tmp = $length;
+                        $length = $width;
+                        $width = $tmp;
+                    }
+                    
                     $height = $matches[6][0] / $multiplier;
 
                     $extraction_available = true;
@@ -180,11 +193,19 @@ class ProductDescExtractor
                 $color = $matches[3][0];
                 $color = str_replace('&', ' and ', $color);
                 $color = str_replace('/', ' and ', $color);
-                $color = str_replace('  ', ' ', $color);
-                $color = str_replace('highgloss', '', $color);
-                $color = str_replace('high-gloss', '', $color);
-                $color = str_replace('semigloss', '', $color);
-                $color = str_replace('semi-gloss', '', $color);
+
+                $to_remove = [
+                  'highloss', 'metalic', 'transparent',
+                  'high-loss', 'semigloss', 'semigloss',
+                  'metallic', 'shiny', 'finish', 'sparkle',
+                  'wood', 'wave', 'gloss', 'semi-', 'sonic',
+                  'gothic', 'high', 'cosmic', 'fiesta', '"',
+                ];
+                foreach($to_remove as $word) {
+                    $color = str_replace($word, '', $color);
+                }
+                $color = str_replace('-', ' ', $color);
+                $color = preg_replace('/\ +/', ' ', $color);
                 $color = trim($color);
 
                 if (!preg_match('~\b(with|and|loss|mat|matt|tone)\b~i', $color)) {
@@ -224,7 +245,7 @@ class ProductDescExtractor
                     'length' => $length,
                     'width' => $width,
                     'height' => $height,
-                    'color' => $color,
+                    'primary-color' => $color,
                     'warnings' => implode(',', $warnings),
                 ];
             }
@@ -243,27 +264,27 @@ class ProductDescExtractor
                     'warnings' => ''
                 ],
                 [
-                    'attribute' => 'net weight',
+                    'attribute' => 'net weight (kg)',
                     'total' => $extracted_stats['weight'],
                     'warnings' => $extracted_stats['weight_warnings']
                 ],[
-                    'attribute' => 'diameter',
+                    'attribute' => 'diameter (inches)',
                     'total' => $extracted_stats['diameter'],
                     'warnings' => $extracted_stats['diameter_warnings']
                 ],[
-                    'attribute' => 'length',
+                    'attribute' => 'length (m)',
                     'total' => $extracted_stats['length'],
                     'warnings' => ''
                 ],[
-                    'attribute' => 'width',
+                    'attribute' => 'width (m)',
                     'total' => $extracted_stats['width'],
                     'warnings' => ''
                 ],[
-                    'attribute' => 'height',
+                    'attribute' => 'height (m)',
                     'total' => $extracted_stats['height'],
                     'warnings' => ''
                 ],[
-                    'attribute' => 'color',
+                    'attribute' => 'primary-color',
                     'total' => $extracted_stats['color'],
                     'warnings' => ''
                 ]
