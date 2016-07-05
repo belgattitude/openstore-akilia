@@ -26,12 +26,11 @@ abstract class AbstractCommand extends Command
      *
      * @return LoggerInterface
      */
-    public function getLogger(OutputInterface $output) {
+    public function getLogger(OutputInterface $output)
+    {
         if ($this->logger === null) {
             $this->logger = new ConsoleLogger($output);
         }
         return $this->logger;
     }
-
-
 }

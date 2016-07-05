@@ -5,7 +5,6 @@ namespace OpenstoreAkilia\Config;
 use Zend\Db\Adapter\Adapter as ZendDb;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\ServiceManager\ServiceManager;
-use Psr\Log\LoggerInterface;
 
 
 class OpenstoreAkiliaSetup
@@ -38,7 +37,8 @@ class OpenstoreAkiliaSetup
      * Return logger
      * @return \Psr\Log\LoggerInterface
      */
-    public function getLogger() {
+    public function getLogger()
+    {
         //@todo
         return new \Psr\Log\NullLogger();
     }

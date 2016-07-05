@@ -44,5 +44,3 @@
         "exclude": ["test", "doc", "tools", ".travis.yml", ".codeclimate.yml", ".coveralls.yml", ".scrutinizer.yml", "phpcs.xml", ".gitignore", ".php_cs"]
     }
 }
-
-

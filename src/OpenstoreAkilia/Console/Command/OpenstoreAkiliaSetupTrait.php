@@ -2,7 +2,6 @@
 
 namespace OpenstoreAkilia\Console\Command;
 
-
 trait OpenstoreAkiliaSetupTrait
 {
 

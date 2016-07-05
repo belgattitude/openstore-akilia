@@ -3,14 +3,13 @@
 namespace OpenstoreAkilia\Console\Command;
 
 use OpenstoreAkilia\Utils\ProductDescExtractor;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
+use Symfony\Component\Console\Helper\Table;
 
 class ProductDescExtractCommand extends AbstractCommand
 {
-    
+
     /**
      * @var StandaloneServer
      */
@@ -38,7 +37,25 @@ EOT
 
         $openstoreSetup = $this->getOpenstoreAkiliaSetup();
         $extractor = new ProductDescExtractor($openstoreSetup->getDatabaseAdapter());
-        $extractor->extract();
+        $extracted = $extractor->extract();
+
+        $output->writeln("Extracted data");
+        $table = new Table($output);
+        $table
+            ->setHeaders(array_keys($extracted['data'][0]))
+            ->setRows($extracted['data'])
+        ;
+        $table->render();
+
+        $table = new Table($output);
+        $output->writeln("Extracted stats");
+        $table
+            ->setHeaders(array_keys($extracted['stats'][0]))
+            ->setRows($extracted['stats'])
+        ;
+        $table->render();
+
+
 
         $output->writeln("Server successfully extracted product desc attributes");
         return 0;
