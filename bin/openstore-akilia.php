@@ -1,14 +1,15 @@
 <?php
 
 use OpenstoreAkilia\Config\OpenstoreAkiliaSetup;
+use OpenstoreAkilia\Console\CommandRepository;
 
 // Bootstrap
 try {
     // Step 1: init autoloader
-    
-    $autoloadFiles = array(__DIR__ . '/../vendor/autoload.php',
-                           __DIR__ . '/../../../autoload.php');
-    
+
+    $autoloadFiles = [__DIR__ . '/../vendor/autoload.php',
+                           __DIR__ . '/../../../autoload.php'];
+
     $found = false;
     foreach ($autoloadFiles as $autoloadFile) {
         if (file_exists($autoloadFile)) {
@@ -16,7 +17,7 @@ try {
             require_once $autoloadFile;
             break;
         }
-    }    
+    }
     if (!$found) {
         throw new \Exception('Cannot find composer vendor autoload, run composer update');
     }
@@ -36,16 +37,15 @@ try {
             $configFound = true;
             break;
         }
-    }    
+    }
     if (!$found) {
         throw new \Exception("Cannot find configuration file '$configFile'");
     }
-    
+
     $ds = DIRECTORY_SEPARATOR;
     $defaultEntitiesFile = __DIR__ . "{$ds}..{$ds}config{$ds}openstore-akilia-standard-sync-entities.config.php";
-    
+
     $setup = OpenstoreAkiliaSetup::loadFromFiles([$defaultEntitiesFile, $configFile]);
-    
 } catch (\Exception $e) {
     echo $e->getMessage() . "\n";
     exit(1);
@@ -55,18 +55,16 @@ $cli = new Symfony\Component\Console\Application('openstore-schema-core console'
 $cli->setCatchExceptions(true);
 
 // commands
-$cli->addCommands(array(    
-    new OpenstoreAkilia\Console\AkiliaSyncDbCommand(),
-));
+$commandRepository = new CommandRepository();
+$cli->addCommands($commandRepository->getRegisteredCommands());
 
 // helpers
-$helpers = array(
+$helpers = [
     'openstore-akilia-setup' => new OpenstoreAkilia\Console\Helper\ConfigurationHelper($setup),
     'question' => new Symfony\Component\Console\Helper\QuestionHelper(),
-);
+];
 foreach ($helpers as $name => $helper) {
     $cli->getHelperSet()->set($helper, $name);
 }
 
 $cli->run();
-

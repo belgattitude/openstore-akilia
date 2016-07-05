@@ -1,6 +1,6 @@
 <?php
 $finder = Symfony\CS\Finder\DefaultFinder::create()
-    ->in(['src', 'test/src', 'config'])
+    ->in(['src', 'test/src', 'config', 'bin'])
     ->name('/\.php|\.php.dist$/')
     ->filter(function (SplFileInfo $file) {
         if (strstr($file->getPath(), 'compatibility')) {

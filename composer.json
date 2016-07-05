@@ -20,9 +20,11 @@
         }
     },
     "require": {
-        "php": ">=5.4.4 || ^7.0",
+        "php": ">=5.5|| ^7.0",
+        "psr/log": "^1.0",
+        "monolog/monolog" : "^1.20.0",
         "soluble/dbwrapper": "^1.2.1",
-        "soluble/flexstore": "^0.11.2",
+        "soluble/flexstore": "^0.11.3",
         "symfony/console": "^2.6.0 || ^3.0.0",
         "doctrine/orm": ">=2.5,<2.7",
         "doctrine/dbal": ">=2.5,<2.7",        
@@ -31,12 +33,13 @@
         "zendframework/zend-servicemanager": "^2.4 || ^3.0",
         "patchwork/utf8": "^1.3.0",
         "nesbot/carbon": "^1.21.0"
-        
     },
     "require-dev": {
         "openstore/schema-core": "dev-master"
     },
-    "bin": ["bin/openstore-akilia"],
+    "bin": [
+        "bin/openstore-akilia"
+    ],
     "archive": {
         "exclude": ["test", "doc", "tools", ".travis.yml", ".codeclimate.yml", ".coveralls.yml", ".scrutinizer.yml", "phpcs.xml", ".gitignore", ".php_cs"]
     }

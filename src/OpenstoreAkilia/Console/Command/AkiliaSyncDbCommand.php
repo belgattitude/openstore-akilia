@@ -1,11 +1,12 @@
 <?php
 
-namespace OpenstoreAkilia\Console;
+namespace OpenstoreAkilia\Console\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use OpenstoreAkilia\Sync\AkiliaSynchronizer;
+
 
 class AkiliaSyncDbCommand extends AbstractCommand
 {
@@ -15,6 +16,8 @@ class AkiliaSyncDbCommand extends AbstractCommand
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
+        $logger = $this->getLogger($output);
+
         $setup = $this->getOpenstoreAkiliaSetup();
 
         $synchronizer = new AkiliaSynchronizer($setup);
@@ -59,7 +62,7 @@ class AkiliaSyncDbCommand extends AbstractCommand
                 InputOption::VALUE_REQUIRED,
                 "Entity(ies) to sync, (separated by comma's) or '*' for all"
             )
-            
+
         ])
 
         ->setHelp(<<<EOT

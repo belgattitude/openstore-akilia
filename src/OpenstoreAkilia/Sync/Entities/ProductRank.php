@@ -59,7 +59,7 @@ class ProductRank extends AbstractEntity
                 . "having nb_active_products > 0";
 
         $brands_map = array_column($adapter->query($brands_sql, Adapter::QUERY_MODE_EXECUTE)->toArray(), 'brand_id', 'reference');
-        
+
         // The null special brand
         $brands_map['NULLBRAND'] = 'NULLBRAND';
 
@@ -97,7 +97,7 @@ class ProductRank extends AbstractEntity
 
                 foreach ($types as $type => $type_config) {
                     $params = $this->getTypeParams($type);
-                    
+
                     if ($brand == 'NULLBRAND') {
                         $params['brands'] = null;
                     } else {
@@ -126,11 +126,10 @@ class ProductRank extends AbstractEntity
                         $product_id = $row['product_id'];
                         // initialize
                         if (!isset($rankings[$pricelist][$brand][$category_reference][$product_id])) {
-                            
                             if ($brand_id == 'NULLBRAND') {
                                 $brand_id = null;
-                            } 
-                           
+                            }
+
                             $rankings[$pricelist][$brand][$category_reference][$product_id] =
                                  array_merge([
                                     'product_id'   => $product_id,
@@ -144,7 +143,6 @@ class ProductRank extends AbstractEntity
                                  ], $initialRankColumns);
                         }
                         $rankings[$pricelist][$brand][$category_reference][$product_id][$rank_column] = $row['rank'];
- 
                     }
                 }
             }
@@ -160,7 +158,7 @@ class ProductRank extends AbstractEntity
                 . " brand_id,"
                 . " total_recorded_quantity, "
                 . " total_recorded_turnover, "
-                . " nb_customers, "                
+                . " nb_customers, "
                 . " deal_rank, "
                 . " fresh_rank, "
                 . " bestseller_rank, "
@@ -177,7 +175,7 @@ class ProductRank extends AbstractEntity
                 . " :brand_id,"
                 . " :total_recorded_quantity, "
                 . " :total_recorded_turnover, "
-                . " :nb_customers, "                
+                . " :nb_customers, "
                 . " :deal_rank,"
                 . " :fresh_rank,"
                 . " :bestseller_rank,"
@@ -190,7 +188,7 @@ class ProductRank extends AbstractEntity
                 . "ON DUPLICATE KEY UPDATE "
                 . " total_recorded_quantity = VALUES(total_recorded_quantity),"
                 . " total_recorded_turnover = VALUES(total_recorded_turnover),"
-                . " nb_customers = VALUES(nb_customers),"                
+                . " nb_customers = VALUES(nb_customers),"
                 . " deal_rank = VALUES(deal_rank),"
                 . " fresh_rank = VALUES(fresh_rank),"
                 . " bestseller_rank = VALUES(bestseller_rank),"
@@ -218,7 +216,7 @@ class ProductRank extends AbstractEntity
                             $to_update['total_recorded_quantity'],
                             $to_update['total_recorded_turnover'],
                             $to_update['nb_customers'],
-  
+
                             isset($to_update['deal_rank']) ? $to_update['deal_rank'] : null,
                             isset($to_update['fresh_rank']) ? $to_update['fresh_rank'] : null,
                             isset($to_update['bestseller_rank']) ? $to_update['bestseller_rank'] : null,
@@ -233,12 +231,12 @@ class ProductRank extends AbstractEntity
                 }
             }
         }
-        
+
         $delete = "delete from product_rank where updated_at <> '$legacy_synchro_at'";
-        
-       
+
+
         $ret = $adapter->query($delete)->execute();
-       
+
         $this->updateProductPricelistFlags($adapter);
 
         $this->log("Successfully loaded $cpt new ranking rows");
