@@ -160,7 +160,7 @@ class ProductDescExtractor
                         $length = $width;
                         $width = $tmp;
                     }
-                    
+
                     $height = $matches[6][0] / $multiplier;
 
                     $extraction_available = true;
@@ -231,9 +231,11 @@ class ProductDescExtractor
                 if ($diff_bbx_gross_weight > 0) {
                     $warnings[] = "net($net_weight)>gross(" . number_format($row['weight_gross'], 2) . ")";
                     $extracted_stats['weight_warnings']++;
+                    $net_weight = null;
                 } elseif ($diff_bbx_gross_weight === 0) {
                     $warnings[] = "net=gross";
                     $extracted_stats['weight_warnings']++;
+                    $net_weight = null;
                 }
 
 
