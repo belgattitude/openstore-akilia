@@ -36,7 +36,8 @@
         "league/csv": "^8.1"
     },
     "require-dev": {
-        "openstore/schema-core": "dev-master"
+        "openstore/schema-core": "dev-master",
+        "zf-commons/zfc-rbac": "^2.6.2"
     },
     "bin": [
         "bin/openstore-akilia"
